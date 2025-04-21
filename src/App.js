@@ -1,25 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { createContext } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthContext, useAuth } from './components/Auth';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Income from './pages/Income';
+import Expense from './pages/Expense';
 
-function App() {
+import LoginPage from './pages/LoginPage';
+
+const AppRoutes = () => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    );
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/income" element={<Income />} />
+        <Route path="/expense" element={<Expense />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Layout>
   );
-}
+};
 
-export default App;
+export default AppRoutes;
