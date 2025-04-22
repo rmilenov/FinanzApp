@@ -7,6 +7,7 @@ import Income from './pages/Income';
 import Expense from './pages/Expense';
 
 import LoginPage from './pages/LoginPage';
+import Events from './pages/Events';
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/income" element={<Income />} />
         <Route path="/expense" element={<Expense />} />
+        <Route path="/Events" element={<Events />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Layout>

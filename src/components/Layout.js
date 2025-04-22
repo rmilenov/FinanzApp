@@ -26,6 +26,9 @@ const Layout = ({ children }) => {
           <li className={location.pathname === '/expense' ? 'active' : ''}>
             <Link to="/expense">Ausgaben</Link>
           </li>
+          <li className={location.pathname === '/events' ? 'active' : ''}>
+            <Link to="/events">Events/Kalender</Link>
+          </li>
             </>
           )}
         </ul>
