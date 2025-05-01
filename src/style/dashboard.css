@@ -134,5 +134,8 @@
     align-items: center;
     gap: 6px;
   }
-  
+  .chart-block canvas {
+   max-width: 900px;
+    margin: 0 auto;
+  }
   

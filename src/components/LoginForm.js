@@ -2,45 +2,55 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import Spinner from '../components/Spinner';
-
-import "../style/login.css"
+import Spinner from './Spinner';
+import '../style/login.css';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const user = JSON.parse(localStorage.getItem(`user_${email}`));
-    setTimeout(() => {
-    if (user && user.password === password) {
-      login(user);
+    try {
+      const res = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Login fehlgeschlagen');
+      }
+
+      const data = await res.json(); // { token, user }
+      login({ token: data.token }); // Context speichert user + token
       navigate('/');
-    } else {
-      alert('Ungültige Anmeldedaten');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
-        setLoading(false);
-    }, 1000); 
   };
 
   return (
     <div className="login-container">
       <div className="login-box">
-      <div className="login-logo">FinanzApp💰</div>
+        <div className="login-logo">FinanzApp💰</div>
         
         <h2>Willkommen zurück!</h2>
         <p>Bitte melde dich mit deinen Zugangsdaten an.</p>
+
         <input
           type="text"
-          placeholder="Benutzername"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Benutzername oder E-Mail"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
         <input
           type="password"
@@ -48,11 +58,13 @@ const LoginForm = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <button type="submit" disabled={loading} onClick={handleLogin}>
-                {loading ? <Spinner /> : 'Login'}
+          {loading ? <Spinner /> : 'Login'}
         </button>
+
         <div className="forgot-password">
-            <a href="#">Passwort vergessen?</a>
+          <a href="#">Passwort vergessen?</a>
         </div>
       </div>
     </div>

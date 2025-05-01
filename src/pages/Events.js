@@ -8,18 +8,18 @@ const Events = () => {
   const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/events');
-        const data = await res.json();
-        setEvents(data);
-      } catch (err) {
-        console.error('Fehler beim Laden der Events:', err);
-      }
-    };
+    
     fetchEvents();
   }, []);
-
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/events');
+      const data = await res.json();
+      setEvents(data);
+    } catch (err) {
+      console.error('Fehler beim Laden der Events:', err);
+    }
+  };
   const saveEvent = (event) => {
     if (editingEvent) {
       // Update an existing event
@@ -36,6 +36,28 @@ const Events = () => {
   const handleEdit = (event) => {
     setEditingEvent(event);
     setModalOpen(true);
+  };
+  const saveEvents = async (event) => {
+    try {
+      if (editingEvent) {
+        // Update bestehende Einnahme
+        await fetch(`http://localhost:5000/api/events/${event.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(event),
+        });
+      } else {
+        // Neue Einnahme
+        await fetch('http://localhost:5000/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(event),
+        });
+      }
+      fetchEvents();
+    } catch (err) {
+      console.error('Fehler beim Speichern der Einnahme:', err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -70,7 +92,7 @@ const Events = () => {
       {modalOpen && (
         <EventFormModal
           initialData={editingEvent}
-          onSave={saveEvent}
+          onSave={saveEvents}
           onClose={() => setModalOpen(false)}
         />
       )}

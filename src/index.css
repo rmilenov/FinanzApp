@@ -213,3 +213,14 @@ medium;
 .event-add-button:active {
   background-color: rgb(39, 136, 215);
 }
+
+.error-message {
+  color: red;
+  margin-top: 0.5em;
+}
+
+.success-message {
+  color: green;
+  margin-top: 0.5em;
+}
+
