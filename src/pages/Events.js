@@ -1,37 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import EventFormModal from '../components/EventFormModal';
 import '../index.css'
+import { useApi } from '../hooks/useApi';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
+  const { request } = useApi();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
     
-    fetchEvents();
-  }, []);
+   fetchEvents();
+  });
   const fetchEvents = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/events');
-      const data = await res.json();
-      setEvents(data);
-    } catch (err) {
-      console.error('Fehler beim Laden der Events:', err);
-    }
+    request('http://localhost:5000/api/events')
+    .then(setEvents)
+    .catch((err) => alert(err.message));
   };
-  const saveEvent = (event) => {
-    if (editingEvent) {
-      // Update an existing event
-      const updatedEvents = events.map((e) =>
-        e.id === event.id ? event : e
-      );
-      setEvents(updatedEvents);
-    } else {
-      // Add a new event
-      setEvents((prev) => [...prev, event]);
-    }
-  };
+ 
 
   const handleEdit = (event) => {
     setEditingEvent(event);
@@ -40,14 +27,14 @@ const Events = () => {
   const saveEvents = async (event) => {
     try {
       if (editingEvent) {
-        // Update bestehende Einnahme
+      
         await fetch(`http://localhost:5000/api/events/${event.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(event),
         });
       } else {
-        // Neue Einnahme
+       
         await fetch('http://localhost:5000/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

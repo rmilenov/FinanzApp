@@ -22,21 +22,25 @@ const LoginForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
+  
+      const data = await res.json(); // ✅ nur einmal
+  
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Login fehlgeschlagen');
+        throw new Error(data.error || 'Login fehlgeschlagen');
       }
-
-      const data = await res.json(); // { token, user }
-      login({ token: data.token }); // Context speichert user + token
-      navigate('/');
+      console.log('🔐 Token empfangen:', data.token);
+      login({ token: data.token,onLogin:()=>{
+        navigate('/');
+        console.log("Login erfolgreich");
+      } }); // ✅ nur Token übergeben
+     
     } catch (err) {
       alert(err.message);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="login-container">

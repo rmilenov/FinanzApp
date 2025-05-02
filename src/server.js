@@ -7,6 +7,12 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const verifyToken = require("./middleware/verifyToken");
 const checkRolePermission = require("./middleware/checkRolePermissions");
+app.use(cors({
+  origin: 'http://localhost:3000',     // React-Entwicklungs-URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false                   // nur wenn du Cookies nutzt: true
+}));
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS transactions (

@@ -33,28 +33,25 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   // Login: nur Token vom Server übernehmen, dann Benutzer laden
-  const login = ({ token }) => {
-    localStorage.setItem("auth_token", token);
-    fetch("/api/me", {
-      headers: { Authorization: "Bearer " + token },
+  const login = ({ token, onLogin }) => {
+    localStorage.setItem('auth_token', token);
+    fetch('http://localhost:5000/api/me', {
+      headers: { Authorization: 'Bearer ' + token }
     })
-      .then(async (res) => {
-        const contentType = res.headers.get("content-type");
-        if (!res.ok) {
-          if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            throw new Error(data.error || "Fehler bei /me");
-          } else {
-            throw new Error("Unerwartete Serverantwort (kein JSON)");
-          }
-        }
+      .then((res) => {
+        if (!res.ok) throw new Error('Fehler bei /me');
+        return res.json();
       })
-      .then((userData) => setUser(userData))
+      .then((userData) => {
+        setUser(userData);
+        if (onLogin) onLogin(); // ✅ navigiere nach erfolgreichem Laden
+      })
       .catch(() => {
-        localStorage.removeItem("auth_token");
+        localStorage.removeItem('auth_token');
         setUser(null);
       });
   };
+  
 
   // Logout: Token löschen, User auf null setzen
   const logout = () => {
