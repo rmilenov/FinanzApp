@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "../style/dashboard.css";
-import { Eye, EyeOff } from "lucide-react"; // Falls du Lucide verwendest (ansonsten FontAwesome oder andere Icons nutzen)
+import { Eye, EyeOff } from "lucide-react";
+import { useApi } from "../hooks/useApi";
 
 const Dashboard = () => {
+  console.log("📊 Dashboard geladen");
+  const { request } = useApi();
+
   const [incomeTotal, setIncomeTotal] = useState(0);
   const [expenseTotal, setExpenseTotal] = useState(0);
   const [categoryData, setCategoryData] = useState({ income: {}, expense: {} });
@@ -21,24 +25,14 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/transactions");
-        const allEntries = await res.json();
+        const allEntries = await request("http://localhost:5000/api/transactions");
+        console.log('🔎 Transaktionen:', allEntries);
 
-        const incomeData = allEntries.filter(
-          (entry) => entry.type === "income"
-        );
-        const expenseData = allEntries.filter(
-          (entry) => entry.type === "expense"
-        );
+        const incomeData = allEntries.filter((entry) => entry.type === "income");
+        const expenseData = allEntries.filter((entry) => entry.type === "expense");
 
-        const incomeSum = incomeData.reduce(
-          (sum, item) => sum + item.amount,
-          0
-        );
-        const expenseSum = expenseData.reduce(
-          (sum, item) => sum + item.amount,
-          0
-        );
+        const incomeSum = incomeData.reduce((sum, item) => sum + item.amount, 0);
+        const expenseSum = expenseData.reduce((sum, item) => sum + item.amount, 0);
 
         const allSorted = [...incomeData, ...expenseData]
           .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -58,10 +52,10 @@ const Dashboard = () => {
           income: groupByCategory(incomeData),
           expense: groupByCategory(expenseData),
         });
-        // Group data by date
+
         const groupByDate = (entries) => {
           return entries.reduce((acc, entry) => {
-            const date = new Date(entry.date).toISOString().split("T")[0]; // Format to YYYY-MM-DD
+            const date = new Date(entry.date).toISOString().split("T")[0];
             if (!acc[date]) acc[date] = 0;
             acc[date] += entry.amount;
             return acc;
@@ -70,7 +64,7 @@ const Dashboard = () => {
 
         const incomeByDate = groupByDate(incomeData);
         const expenseByDate = groupByDate(expenseData);
-        // Calculate daily balance and filter for the last 3 months
+
         const now = new Date();
         const threeMonthsAgo = new Date(now);
         threeMonthsAgo.setMonth(now.getMonth() - 3);
@@ -78,24 +72,19 @@ const Dashboard = () => {
         const balanceHistory = [];
         let cumulativeBalance = 0;
 
-        // Go through the last 3 months day-by-day
         for (
           let d = new Date(threeMonthsAgo);
           d <= now;
           d.setDate(d.getDate() + 1)
         ) {
-          const dateString = d.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
+          const dateString = d.toISOString().split("T")[0];
           const incomeForDay = incomeByDate[dateString] || 0;
           const expenseForDay = expenseByDate[dateString] || 0;
 
           cumulativeBalance += incomeForDay - expenseForDay;
-          balanceHistory.push({
-            date: dateString,
-            balance: cumulativeBalance,
-          });
+          balanceHistory.push({ date: dateString, balance: cumulativeBalance });
         }
 
-        // Set the balance history
         setBalanceHistory(balanceHistory);
       } catch (err) {
         console.error("Fehler beim Laden der Transaktionen:", err);
@@ -104,8 +93,7 @@ const Dashboard = () => {
 
     const fetchEvents = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/events");
-        const data = await res.json();
+        const data = await request("http://localhost:5000/api/events");
         const now = new Date().toISOString().split("T")[0];
 
         const upcoming = data
@@ -113,7 +101,6 @@ const Dashboard = () => {
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(0, 3);
 
-        // Berechne Countdown für jedes Event
         const eventsWithCountdown = upcoming.map((event) => {
           const eventDate = new Date(event.date);
           const now = new Date();
@@ -150,7 +137,6 @@ const Dashboard = () => {
       new Date(entry.date).toLocaleDateString()
     );
     const balances = balanceHistory.map((entry) => entry.balance);
-    console.log(dates, balances);
 
     return (
       <div className="chart-block">
@@ -171,17 +157,11 @@ const Dashboard = () => {
           options={{
             scales: {
               x: {
-                type: "category", // X-Achse als Zeitachse
-                title: {
-                  display: true,
-                  text: "Zeitpunkt",
-                },
+                type: "category",
+                title: { display: true, text: "Zeitpunkt" },
               },
               y: {
-                title: {
-                  display: true,
-                  text: "Saldo (€)",
-                },
+                title: { display: true, text: "Saldo (€)" },
               },
             },
           }}
@@ -191,9 +171,10 @@ const Dashboard = () => {
   };
 
   const renderChart = (dataObj, title) => {
-    if (balanceHistory.length === 0) {
-      return <p>Keine Saldo-Daten verfügbar</p>;
+    if (!dataObj || Object.keys(dataObj).length === 0) {
+      return <p>Keine Daten verfügbar</p>;
     }
+
     const labels = Object.keys(dataObj);
     const data = Object.values(dataObj);
 
@@ -207,12 +188,8 @@ const Dashboard = () => {
               {
                 data,
                 backgroundColor: [
-                  "#FF6384",
-                  "#36A2EB",
-                  "#FFCE56",
-                  "#4BC0C0",
-                  "#9966FF",
-                  "#FF9F40",
+                  "#FF6384", "#36A2EB", "#FFCE56",
+                  "#4BC0C0", "#9966FF", "#FF9F40",
                 ],
               },
             ],
@@ -228,12 +205,8 @@ const Dashboard = () => {
         <h2>Dashboard</h2>
         {renderBalanceChart()}
         <div className="summary">
-          <p>
-            <strong>Einnahmen:</strong> {incomeTotal.toFixed(2)} €
-          </p>
-          <p>
-            <strong>Ausgaben:</strong> {expenseTotal.toFixed(2)} €
-          </p>
+          <p><strong>Einnahmen:</strong> {incomeTotal.toFixed(2)} €</p>
+          <p><strong>Ausgaben:</strong> {expenseTotal.toFixed(2)} €</p>
           <p className={incomeTotal - expenseTotal < 0 ? "red" : "green"}>
             <strong>Saldo:</strong> {(incomeTotal - expenseTotal).toFixed(2)} €
           </p>
@@ -245,10 +218,7 @@ const Dashboard = () => {
           <div className="dashboard-section">
             <div className="section-header">
               <h3>Letzte Transaktionen</h3>
-              <EyeOff
-                className="section-toggle"
-                onClick={() => toggleSection("transactions")}
-              />
+              <EyeOff onClick={() => toggleSection("transactions")} className="section-toggle" />
             </div>
             <ul className="transaction-list">
               {recentEntries.map((entry, index) => {
@@ -256,15 +226,7 @@ const Dashboard = () => {
                 return (
                   <li key={index} className={`transaction-item ${entry.type}`}>
                     <span>{entry.title}</span>
-                    <span>
-                      {new Date(entry.date).toLocaleString("de-DE", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                    <span>{new Date(entry.date).toLocaleString("de-DE")}</span>
                     <span>{entry.category}</span>
                     <span style={{ color: isIncome ? "#28a745" : "#dc3545" }}>
                       {isIncome ? "↑" : "↓"} {entry.amount.toFixed(2)} €
@@ -280,10 +242,7 @@ const Dashboard = () => {
           <div className="dashboard-section">
             <div className="section-header">
               <h3>Bevorstehende Events</h3>
-              <EyeOff
-                className="section-toggle"
-                onClick={() => toggleSection("events")}
-              />
+              <EyeOff onClick={() => toggleSection("events")} className="section-toggle" />
             </div>
             {upcomingEvents.length === 0 ? (
               <p>Keine bevorstehenden Events.</p>
@@ -291,8 +250,7 @@ const Dashboard = () => {
               <ul>
                 {upcomingEvents.map((event) => (
                   <li key={event.id}>
-                    <strong>{event.title}</strong> am{" "}
-                    {new Date(event.date).toLocaleDateString()}
+                    <strong>{event.title}</strong> am {new Date(event.date).toLocaleDateString()}
                     <span>Verbleibende Zeit: {event.countdown}</span>
                   </li>
                 ))}
@@ -303,13 +261,10 @@ const Dashboard = () => {
       </div>
 
       {visibleSections.charts && (
-        <div className="dashboard-section ">
+        <div className="dashboard-section">
           <div className="section-header">
             <h3>Kategorien</h3>
-            <EyeOff
-              className="section-toggle"
-              onClick={() => toggleSection("charts")}
-            />
+            <EyeOff onClick={() => toggleSection("charts")} className="section-toggle" />
           </div>
           <div className="chart-container">
             {renderChart(categoryData.income, "Einnahmen nach Kategorie")}
@@ -320,26 +275,17 @@ const Dashboard = () => {
 
       <div className="restore-icons">
         {!visibleSections.transactions && (
-          <div
-            onClick={() => toggleSection("transactions")}
-            title="Transaktionen einblenden"
-          >
+          <div onClick={() => toggleSection("transactions")} title="Transaktionen einblenden">
             <Eye /> Transaktionen
           </div>
         )}
         {!visibleSections.events && (
-          <div
-            onClick={() => toggleSection("events")}
-            title="Events einblenden"
-          >
+          <div onClick={() => toggleSection("events")} title="Events einblenden">
             <Eye /> Events
           </div>
         )}
         {!visibleSections.charts && (
-          <div
-            onClick={() => toggleSection("charts")}
-            title="Charts einblenden"
-          >
+          <div onClick={() => toggleSection("charts")} title="Charts einblenden">
             <Eye /> Charts
           </div>
         )}

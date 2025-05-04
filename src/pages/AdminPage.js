@@ -1,4 +1,4 @@
-import UserRoleManager from "../components/userRoleManager";
+import UserRoleManager from "../components/UserRoleManager";
 
 const AdminPage = () => (
   <div>

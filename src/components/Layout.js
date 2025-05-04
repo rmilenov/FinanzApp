@@ -6,6 +6,7 @@ import '../index.css';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
+  console.log("👤 Aktueller Benutzer:", user);
   const location = useLocation();
 
   // Hilfsfunktion zur Rechteprüfung

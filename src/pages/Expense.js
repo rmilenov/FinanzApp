@@ -3,17 +3,20 @@ import EntryList from '../components/EntryList';
 import FloatingButton from '../components/FloatingButton';
 import EntryFormModal from '../components/EntryFormModal';
 import { exportToExcel } from '../components/ExportToExcel';
+import { useApi } from '../hooks/useApi';
 
 const Expense = () => {
   const [entries, setEntries] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
+  const { request } = useApi();
 
   const fetchEntries = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/transactions');
-      const data = await res.json();
-      const filtered = data.filter(entry => entry.type === 'expense');
+      const res = await request('http://localhost:5000/api/transactions');
+      //console.log(res);
+      //const data = await res.json();
+      const filtered = res.filter(entry => entry.type === 'expense');
       setEntries(filtered);
     } catch (err) {
       console.error('Fehler beim Laden der Ausgaben:', err);

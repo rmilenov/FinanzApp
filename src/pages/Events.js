@@ -8,16 +8,18 @@ const Events = () => {
   const { request } = useApi();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-
-  useEffect(() => {
-    
-   fetchEvents();
-  });
+  
   const fetchEvents = async () => {
     request('http://localhost:5000/api/events')
     .then(setEvents)
     .catch((err) => alert(err.message));
   };
+
+  useEffect(() => {
+    
+   fetchEvents();
+  },[]);
+  
  
 
   const handleEdit = (event) => {

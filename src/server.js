@@ -8,11 +8,18 @@ const jwt = require("jsonwebtoken");
 const verifyToken = require("./middleware/verifyToken");
 const checkRolePermission = require("./middleware/checkRolePermissions");
 app.use(cors({
-  origin: 'http://localhost:3000',     // React-Entwicklungs-URL
+  origin: 'http://localhost:3000',     
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false                   // nur wenn du Cookies nutzt: true
+  allowedHeaders: ['Content-Type', 'Authorization','Cache-Control'],
+                  
 }));
+// Preflight-Anfragen erlauben (sehr wichtig für CORS bei Authorization!)
+app.options('*', cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
+}));
+
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS transactions (
@@ -98,13 +105,7 @@ db.serialize(() => {
       (2, 'events', 1, 1)
     `);
 });
-app.use(
-  cors({
-    origin: "http://localhost:3000", // oder '*' für alles, aber unsicherer
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
+
 app.use(express.json());
 
 // API-Endpunkt, um Transaktionen zu speichern

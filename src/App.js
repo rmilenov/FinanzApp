@@ -8,6 +8,8 @@ import Expense from "./pages/Expense";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Events from "./pages/Events";
+import AdminPage from "./pages/AdminPage";
+
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -44,12 +46,18 @@ const AppRoutes = () => {
           }
         />
         
-        {/* <Route
+         <Route
           path="/admin"
           element={
             user?.rights?.users?.read ? <AdminPage /> : <Navigate to="/" />
           }
-        /> */}
+        /> 
+          <Route
+          path="/"
+          element={
+            user?.rights?.users?.read ? <Home /> : <Navigate to="/" />
+          }
+        /> 
       </Routes>
     </Layout>
   );

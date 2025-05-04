@@ -3,34 +3,45 @@ import { AuthContext } from '../context/AuthContext';
 
 export const useApi = () => {
   const { logout } = useContext(AuthContext);
+  const token = sessionStorage.getItem('auth_token');
 
   const request = async (url, options = {}) => {
-    const token = localStorage.getItem('auth_token');
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'Cache-Control': 'no-cache'
+    };
 
     try {
       const res = await fetch(url, {
         ...options,
         headers: {
+          ...defaultHeaders,
           ...(options.headers || {}),
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json',
         },
       });
 
-      // Auto-logout bei 401
-      if (res.status === 401 || res.status === 403) {
+      if (res.status === 401) {
         logout();
-        throw new Error('Zugriff verweigert. Bitte erneut anmelden.');
+        throw new Error('Nicht autorisiert');
+      }
+
+      if (res.status === 204) {
+        return null; // kein Inhalt (z. B. bei DELETE)
+      }
+
+      if (res.status === 304) {
+        return null; // nicht verändert (z. B. durch Cache)
       }
 
       const contentType = res.headers.get('Content-Type');
       if (contentType && contentType.includes('application/json')) {
         return await res.json();
-      } else {
-        return res;
       }
+
+      return res.text();
     } catch (err) {
-      console.error('❌ API Fehler:', err);
+      console.error('API-Fehler:', err);
       throw err;
     }
   };

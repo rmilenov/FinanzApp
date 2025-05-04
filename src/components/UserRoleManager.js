@@ -1,40 +1,53 @@
-import { useEffect, useState } from 'react';
-import { getToken } from '../utils/auth'; // Falls du einen Token-Helper nutzt
+// src/components/UserRoleManager.js
+import React, { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import { useApi } from '../hooks/useApi';
 
 const UserRoleManager = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const { request } = useApi();
+  const { user } = useContext(AuthContext); // ⬅️ aktuelle Nutzerinfos
+  const token = sessionStorage.getItem('auth_token'); // ⬅️ Token direkt holen
 
   useEffect(() => {
-    fetch('/api/users', {
-      headers: { Authorization: 'Bearer ' + getToken() }
-    })
-      .then(res => res.json())
-      .then(setUsers);
+    // Benutzer abrufen
+    request('http://localhost:5000/api/users')
+      .then(setUsers)
+      .catch((err) => console.error('Fehler beim Laden der Benutzer:', err));
 
-    fetch('/api/roles', {
-      headers: { Authorization: 'Bearer ' + getToken() }
-    })
-      .then(res => res.json())
-      .then(setRoles);
+    // Rollen abrufen
+    request('http://localhost:5000/api/roles')
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setRoles(data);
+        } else {
+          console.error('❌ Rollen-Antwort ist kein Array:', data);
+          setRoles([]);
+        }
+      })
+      .catch((err) => console.error('Fehler beim Laden der Rollen:', err));
   }, []);
 
   const handleRoleChange = (userId, newRoleId) => {
-    fetch('/api/user-roles', {
+    request('http://localhost:5000/api/user-roles', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + getToken()
+        'Authorization': 'Bearer ' + token,
       },
-      body: JSON.stringify({ userId, roleId: newRoleId })
+      body: JSON.stringify({ userId, roleId: newRoleId }),
     })
-      .then(res => res.json())
       .then(() => {
-        // Update UI direkt
-        setUsers(users.map(user =>
-          user.id === userId ? { ...user, role: roles.find(r => r.id == newRoleId)?.name } : user
-        ));
-      });
+        // Rolle im lokalen Zustand aktualisieren
+        const newRole = roles.find((r) => r.id === newRoleId);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId ? { ...u, role: newRole?.name ?? 'Unbekannt' } : u
+          )
+        );
+      })
+      .catch((err) => alert('Fehler beim Zuweisen der Rolle: ' + err.message));
   };
 
   return (
@@ -49,21 +62,26 @@ const UserRoleManager = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
-            <tr key={user.id}>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
+          {users.map((u) => (
+            <tr key={u.id}>
+              <td>{u.username}</td>
+              <td>{u.email}</td>
               <td>
-              <select
-                  value={roles.find(r => r.name === user.role)?.id || ''}
-                  onChange={e => handleRoleChange(user.id, parseInt(e.target.value))}
-                  disabled={user.role === 'master'}
+                <select
+                  value={
+                    Array.isArray(roles)
+                      ? roles.find((r) => r.name === u.role)?.id || ''
+                      : ''
+                  }
+                  onChange={(e) =>
+                    handleRoleChange(u.id, parseInt(e.target.value))
+                  }
+                  disabled={u.role === 'master'} // 👑 Master darf nicht verändert werden
                 >
-
                   <option value="">Keine Rolle</option>
-                  {roles.map(role => (
-                    <option key={role.id} value={role.id}>
-                       {role.name === 'master' ? '👑 Master' : role.name}
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name === 'master' ? '👑 Master' : r.name}
                     </option>
                   ))}
                 </select>
