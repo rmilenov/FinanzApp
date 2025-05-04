@@ -30,14 +30,14 @@ const Events = () => {
     try {
       if (editingEvent) {
       
-        await fetch(`http://localhost:5000/api/events/${event.id}`, {
+        await request(`http://localhost:5000/api/events/${event.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(event),
         });
       } else {
        
-        await fetch('http://localhost:5000/api/events', {
+        await request('http://localhost:5000/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(event),
@@ -51,7 +51,7 @@ const Events = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/events/${id}`, { method: 'DELETE' });
+      await request(`http://localhost:5000/api/events/${id}`, { method: 'DELETE' });
       setEvents(events.filter((event) => event.id !== id));
     } catch (err) {
       console.error('Fehler beim Löschen des Events:', err);

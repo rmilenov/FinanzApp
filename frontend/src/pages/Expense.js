@@ -30,13 +30,13 @@ const Expense = () => {
   const saveEntries = async (entry) => {
     try {
       if (editingEntry) {
-        await fetch(`http://localhost:5000/api/transactions/${entry.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        await request(`http://localhost:5000/api/transactions/${entry.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(entry),
         });
       } else {
-        await fetch('http://localhost:5000/api/transactions', {
+        await request('http://localhost:5000/api/transactions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry),
@@ -50,7 +50,7 @@ const Expense = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/transactions/${id}`, {
+      await request(`http://localhost:5000/api/transactions/${id}`, {
         method: 'DELETE',
       });
       fetchEntries();

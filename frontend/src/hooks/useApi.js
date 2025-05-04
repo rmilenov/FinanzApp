@@ -3,22 +3,20 @@ import { AuthContext } from '../context/AuthContext';
 
 export const useApi = () => {
   const { logout } = useContext(AuthContext);
-  const token = sessionStorage.getItem('auth_token');
 
   const request = async (url, options = {}) => {
-    const defaultHeaders = {
+    const token = sessionStorage.getItem('auth_token');
+
+    const headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      'Cache-Control': 'no-cache'
+      ...(options.headers || {}),
+      ...(token ? { Authorization: 'Bearer ' + token } : {}),
     };
 
     try {
       const res = await fetch(url, {
         ...options,
-        headers: {
-          ...defaultHeaders,
-          ...(options.headers || {}),
-        },
+        headers,
       });
 
       if (res.status === 401) {
@@ -26,22 +24,16 @@ export const useApi = () => {
         throw new Error('Nicht autorisiert');
       }
 
-      if (res.status === 204) {
-        return null; // kein Inhalt (z. B. bei DELETE)
-      }
-
-      if (res.status === 304) {
-        return null; // nicht verändert (z. B. durch Cache)
-      }
+      if (res.status === 204) return null;
 
       const contentType = res.headers.get('Content-Type');
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         return await res.json();
       }
 
-      return res.text();
+      return await res.text(); // z. B. für Fehlertexte
     } catch (err) {
-      console.error('API-Fehler:', err);
+      console.error('❌ API-Fehler:', err);
       throw err;
     }
   };

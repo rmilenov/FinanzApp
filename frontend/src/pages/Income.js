@@ -30,14 +30,14 @@ const Income = () => {
     try {
       if (editingEntry) {
         // Update bestehende Einnahme
-        await fetch(`http://localhost:5000/api/transactions/${entry.id}`, {
+        await request(`http://localhost:5000/api/transactions/${entry.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry),
         });
       } else {
         // Neue Einnahme
-        await fetch('http://localhost:5000/api/transactions', {
+        await request('http://localhost:5000/api/transactions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry),
@@ -51,7 +51,7 @@ const Income = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/transactions/${id}`, {
+      await request(`http://localhost:5000/api/transactions/${id}`, {
         method: 'DELETE',
       });
       fetchEntries();
